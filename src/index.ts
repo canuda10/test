@@ -1,3 +1,4 @@
+import bodyParser from 'body-parser';
 import express from 'express';
 import http from 'http';
 import WebSocket from 'ws';
@@ -12,11 +13,18 @@ const client = new MpdClient();
 const PORT = 3000;
 
 const app = express();
-const server = http.createServer(express);
+// app.use(bodyParser.json());
+app.use(bodyParser.text({ type: '*/*'}));
+// app.use(bodyParser.raw({ type: '*/*'}));
+
+const server = http.createServer(app);
+
 const wss = new WebSocket.Server({ server });
 
+// WebSocket section.
 wss.on('connection', ws => {
-  client.on('volume', () => ws.send({ volume: client.volume }));
+  client.on('volume', () => 
+    ws.send(JSON.stringify({ volume: client.volume })));
 
   ws.on('message', message => {
     console.log(`ws received: "${message}".`);
@@ -25,19 +33,20 @@ wss.on('connection', ws => {
   ws.send(`Hi there, I'm a WebSocket server.`);
 });
 
+// REST section.
 app.get('/', (req, res) => res.send(`Hello World!\n`));
 
 app.get('/volume', (req, res) => res.send(`${client.volume}\n`));
-app.put('/volume/:volume', (req, res) => {
-  let val = Math.abs(+req.params.volume);
+app.put('/volume', (req, res) => {
+  let val = Math.abs(+req.body);
   let msg = '';
     if (isNaN(val))
-        return res.send(`Put volume "${req.params.volume}" is invalid.\n`);
+        return res.send(`Put volume "${req.body}" is invalid.\n`);
 
-    if (req.params.volume.includes('+')) {
+    if (req.body.includes('+')) {
         msg += `Increasing volume by ${val}.\n`;
         val = client.volume + val;
-    } else if (req.params.volume.includes('-')) {
+    } else if (req.body.includes('-')) {
         msg += `Decreasing volume by ${val}.\n`;
         val = client.volume - val;
     }
@@ -45,6 +54,22 @@ app.put('/volume/:volume', (req, res) => {
     client.volume = val;
   res.send(msg);
 });
+// app.put('/volume/:volume', (req, res) => {
+//   let val = Math.abs(+req.params.volume);
+//   let msg = '';
+//     if (isNaN(val))
+//         return res.send(`Put volume "${req.params.volume}" is invalid.\n`);
 
-// app.listen(PORT, () => console.log(`app is listening`));
+//     if (req.params.volume.includes('+')) {
+//         msg += `Increasing volume by ${val}.\n`;
+//         val = client.volume + val;
+//     } else if (req.params.volume.includes('-')) {
+//         msg += `Decreasing volume by ${val}.\n`;
+//         val = client.volume - val;
+//     }
+//     msg += `Setting volume to ${val}.\n`;
+//     client.volume = val;
+//   res.send(msg);
+// });
+
 server.listen(PORT, () => console.log(`server is listening.`));

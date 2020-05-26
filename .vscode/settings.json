@@ -1,5 +1,9 @@
 {
     "files.exclude": {
+        "build": true,
         "node_modules": true
-    }
+    },
+    "editor.rulers": [
+        80
+    ]
 }
