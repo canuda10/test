@@ -34,25 +34,26 @@ wss.on('connection', ws => {
 });
 
 // REST section.
-app.get('/', (req, res) => res.send(`Hello World!\n`));
+app.get('/', async (req, res) => res.send(`Hello World!\n`));
 
-app.get('/volume', (req, res) => res.send(`${client.volume}\n`));
-app.put('/volume', (req, res) => {
+app.get('/volume', async (req, res) => res.send(`${client.volume}\n`));
+app.put('/volume', async (req, res) => {
   let val = Math.abs(+req.body);
-  let msg = '';
-    if (isNaN(val))
-        return res.send(`Put volume "${req.body}" is invalid.\n`);
+  // let msg = '';
+  if (isNaN(val))
+    return res.status(500).send(`Put volume "${req.body}" is invalid.\n`);
 
-    if (req.body.includes('+')) {
-        msg += `Increasing volume by ${val}.\n`;
-        val = client.volume + val;
-    } else if (req.body.includes('-')) {
-        msg += `Decreasing volume by ${val}.\n`;
-        val = client.volume - val;
-    }
-    msg += `Setting volume to ${val}.\n`;
-    client.volume = val;
-  res.send(msg);
+  if (req.body.includes('+')) {
+    // msg += `Increasing volume by ${val}.\n`;
+    val = client.volume + val;
+  } else if (req.body.includes('-')) {
+    // msg += `Decreasing volume by ${val}.\n`;
+    val = client.volume - val;
+  }
+  // msg += `Setting volume to ${val}.\n`;
+  client.volume = val;
+  // res.send(msg);
+  res.sendStatus(200);
 });
 // app.put('/volume/:volume', (req, res) => {
 //   let val = Math.abs(+req.params.volume);
